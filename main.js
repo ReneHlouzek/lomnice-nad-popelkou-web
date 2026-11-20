@@ -18,6 +18,9 @@ if(y)y.textContent=new Date().getFullYear();
 const hero=document.querySelector(".hero-home");
 const crestTrigger=document.querySelector(".crest-trigger");
 const crestCrossTrigger=document.querySelector(".crest-cross-trigger");
+const crestMotion=document.querySelector(".hero-crest-motion");
+let crestMotionTimer=null;
+const crestMotionDuration=3500;
 
 if(hero&&crestTrigger){
   crestTrigger.addEventListener("click",()=>{
@@ -30,13 +33,23 @@ if(hero&&crestTrigger){
   });
 }
 
-if(hero&&crestCrossTrigger){
+if(hero&&crestCrossTrigger&&crestMotion){
   crestCrossTrigger.addEventListener("click",event=>{
     event.preventDefault();
     event.stopPropagation();
     if(hero.classList.contains("is-open")||hero.classList.contains("is-crest-motion"))return;
+
+    // Změna URL zajistí nové spuštění GIFu od prvního snímku při každém kliknutí.
+    crestMotion.src="assets/images/erb_pohyb.gif?play="+Date.now();
     hero.classList.add("is-crest-motion");
-    crestCrossTrigger.disabled=true;
+
+    // Během přehrávání je statický erb skrytý; po dokončení se znovu zobrazí.
+    window.clearTimeout(crestMotionTimer);
+    crestMotionTimer=window.setTimeout(()=>{
+      hero.classList.remove("is-crest-motion");
+      crestCrossTrigger.disabled=false;
+      crestMotion.src="assets/images/erb_pohyb.gif";
+    },crestMotionDuration);
   });
 }
 
