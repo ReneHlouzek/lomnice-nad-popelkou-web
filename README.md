@@ -25,7 +25,7 @@ V GitHubu otevři repozitář, zvol **Add file → Upload files**, přetáhni fo
 V repozitáři otevři **Settings → Pages** a nastav **Deploy from a branch**, větev `main` a složku `/ (root)`. Potvrď **Save**.
 
 Web pak bude dostupný na:
-https://reneh louzek.github.io/lomnice-nad-popelkou-web/
+https://ReneHlouzek.github.io/lomnice-nad-popelkou-web/
 
 ## Poznámka
 Stránka je zatím úvodní vizuální kostra. Odkazy na další sekce a obsah postupně napojíme na skutečné stránky a ověřené informace města.
