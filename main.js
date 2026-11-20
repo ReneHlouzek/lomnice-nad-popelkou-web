@@ -20,7 +20,8 @@ const crestTrigger=document.querySelector(".crest-trigger");
 const crestCrossTrigger=document.querySelector(".crest-cross-trigger");
 const crestMotion=document.querySelector(".hero-crest-motion");
 let crestMotionTimer=null;
-const crestMotionDuration=3500;
+// GIF se přehraje přibližně 3,5 s a jeho poslední snímek zůstane ještě 2 s viditelný.
+const crestMotionDuration=5500;
 
 if(hero&&crestTrigger){
   crestTrigger.addEventListener("click",()=>{
