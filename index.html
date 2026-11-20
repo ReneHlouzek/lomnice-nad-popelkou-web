@@ -6,6 +6,67 @@
   <meta name="theme-color" content="#173b35">
   <title>Lomnice nad Popelkou</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    .crest-stage {
+      position: absolute;
+      z-index: 2;
+      left: calc(50% - var(--art-w)*.005);
+      top: calc(50% + var(--art-h)*.064);
+      width: calc(var(--art-w)*.485);
+      aspect-ratio: 1;
+      transform: translate(-50%, -50%);
+      transition: opacity 3s ease, visibility 3s ease;
+    }
+    .crest-stage .crest-trigger {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      transform: none;
+    }
+    .crest-stage .hero-crest-motion {
+      display: none;
+      position: absolute;
+      z-index: 3;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+    }
+    .crest-cross-trigger {
+      position: absolute;
+      z-index: 4;
+      left: 36.6%;
+      top: 15.5%;
+      width: 4%;
+      height: 4%;
+      padding: 0;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      cursor: pointer;
+    }
+    .crest-cross-trigger:focus-visible {
+      outline: 2px solid #173b35;
+      outline-offset: 2px;
+    }
+    .hero.is-open .crest-stage,
+    .hero.is-crest-motion .crest-trigger {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .hero.is-crest-motion .hero-crest-motion {
+      display: block;
+    }
+    .hero.is-crest-motion .crest-cross-trigger {
+      display: none;
+    }
+  </style>
 </head>
 <body class="home-clean">
   <main class="hero hero-home" aria-label="Lomnice nad Popelkou">
@@ -18,9 +79,13 @@
       <button class="quadrant-hotspot hotspot-citizen" type="button" aria-label="Občan"></button>
       <button class="quadrant-hotspot hotspot-tourist" type="button" aria-label="Turista"></button>
     </div>
-    <button class="crest-trigger" type="button" aria-label="Otevřít rozcestník" aria-pressed="false">
-      <img class="hero-crest" src="assets/images/erb.png" alt="">
-    </button>
+    <div class="crest-stage">
+      <button class="crest-trigger" type="button" aria-label="Otevřít rozcestník" aria-pressed="false">
+        <img class="hero-crest" src="assets/images/erb.png" alt="">
+      </button>
+      <button class="crest-cross-trigger" type="button" aria-label="Spustit animaci křížku na sekeře"></button>
+      <img class="hero-crest-motion" src="assets/images/erb_pohyb.gif" alt="" aria-hidden="true">
+    </div>
   </main>
   <script src="main.js" defer></script>
 </body>
