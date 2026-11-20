@@ -20,8 +20,9 @@ const crestTrigger=document.querySelector(".crest-trigger");
 const crestCrossTrigger=document.querySelector(".crest-cross-trigger");
 const crestMotion=document.querySelector(".hero-crest-motion");
 let crestMotionTimer=null;
-// GIF se přehraje přibližně 3,5 s a jeho poslední snímek zůstane ještě 2 s viditelný.
-const crestMotionDuration=5500;
+let crestHoldTimer=null;
+const crestMotionDuration=3500;
+const crestFinalFrameHold=2000;
 
 if(hero&&crestTrigger){
   crestTrigger.addEventListener("click",()=>{
@@ -44,12 +45,24 @@ if(hero&&crestCrossTrigger&&crestMotion){
     crestMotion.src="assets/images/erb_pohyb.gif?play="+Date.now();
     hero.classList.add("is-crest-motion");
 
-    // Během přehrávání je statický erb skrytý; po dokončení se znovu zobrazí.
+    // Po prvním přehrání zachytíme aktuální snímek do statického obrázku,
+    // aby se GIF během dvousekundové pauzy nezačal přehrávat znovu.
     window.clearTimeout(crestMotionTimer);
+    window.clearTimeout(crestHoldTimer);
     crestMotionTimer=window.setTimeout(()=>{
-      hero.classList.remove("is-crest-motion");
-      crestCrossTrigger.disabled=false;
-      crestMotion.src="assets/images/erb_pohyb.gif";
+      const canvas=document.createElement("canvas");
+      canvas.width=crestMotion.naturalWidth||247;
+      canvas.height=crestMotion.naturalHeight||247;
+      const context=canvas.getContext("2d");
+      if(context){
+        context.drawImage(crestMotion,0,0,canvas.width,canvas.height);
+        crestMotion.src=canvas.toDataURL("image/png");
+      }
+      crestHoldTimer=window.setTimeout(()=>{
+        hero.classList.remove("is-crest-motion");
+        crestCrossTrigger.disabled=false;
+        crestMotion.src="assets/images/erb_pohyb.gif";
+      },crestFinalFrameHold);
     },crestMotionDuration);
   });
 }
