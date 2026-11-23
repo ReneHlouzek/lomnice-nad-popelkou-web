@@ -34,67 +34,23 @@ if(hero&&crestTrigger){
 }
 
 if(hero&&crestCrossTrigger&&crestMotion){
-  crestCrossTrigger.addEventListener("click",async event=>{
+  crestCrossTrigger.addEventListener("click",event=>{
     event.preventDefault();
     event.stopPropagation();
     if(hero.classList.contains("is-open")||hero.classList.contains("is-crest-motion"))return;
 
+    // Animovaný WebP přehrává přímo prohlížeč; rozměry i pozici dědí
+    // z .crest-stage, tedy přesně z původního kruhu erbu.
+    crestMotion.src="assets/images/easter_egg.webp";
     hero.classList.add("is-crest-motion");
     crestCrossTrigger.disabled=true;
-    window.clearTimeout(crestHoldTimer);
 
-    try{
-      // GIF dekódujeme na jednotlivé snímky, aby se přehrál přesně jednou.
-      const {parseGIF,decompressFrames}=await import("https://code4fukui.github.io/gifuct-js/src/index.js");
-      const response=await fetch("assets/images/erb_pohyb.gif",{cache:"no-store"});
-      if(!response.ok)throw new Error("GIF se nepodařilo načíst.");
-      const parsed=parseGIF(await response.arrayBuffer());
-      const frames=decompressFrames(parsed,true);
-      if(!frames.length)throw new Error("GIF neobsahuje žádné snímky.");
-
-      const canvas=document.createElement("canvas");
-      canvas.width=parsed.lsd.width;
-      canvas.height=parsed.lsd.height;
-      const context=canvas.getContext("2d");
-      let index=0;
-      let previousFrame=null;
-      let restoreCanvas=null;
-
-      const showNextFrame=()=>{
-        if(previousFrame){
-          if(previousFrame.disposalType===2){
-            const d=previousFrame.dims;
-            context.clearRect(d.left,d.top,d.width,d.height);
-          }else if(previousFrame.disposalType===3&&restoreCanvas){
-            context.putImageData(restoreCanvas,0,0);
-          }
-        }
-
-        const frame=frames[index];
-        if(frame.disposalType===3)restoreCanvas=context.getImageData(0,0,canvas.width,canvas.height);
-        context.putImageData(new ImageData(new Uint8ClampedArray(frame.patch),frame.dims.width,frame.dims.height),frame.dims.left,frame.dims.top);
-        crestMotion.src=canvas.toDataURL("image/png");
-        previousFrame=frame;
-        index++;
-
-        if(index<frames.length){
-          window.setTimeout(showNextFrame,Math.max(20,frame.delay||100));
-        }else{
-          // Poslední snímek zůstane nehybný celé dvě sekundy.
-          crestHoldTimer=window.setTimeout(()=>{
-            hero.classList.remove("is-crest-motion");
-            crestCrossTrigger.disabled=false;
-            crestMotion.src="assets/images/erb_pohyb.gif";
-          },crestFinalFrameHold);
-        }
-      };
-      showNextFrame();
-    }catch(error){
-      console.error("Animaci erbu se nepodařilo přehrát:",error);
+    crestMotion.addEventListener("error",()=>{
+      console.error("Animaci easter_egg.webp se nepodařilo načíst.");
       hero.classList.remove("is-crest-motion");
       crestCrossTrigger.disabled=false;
-      crestMotion.src="assets/images/erb_pohyb.gif";
-    }
+      crestMotion.removeAttribute("src");
+    },{once:true});
   });
 }
 
