@@ -106,7 +106,7 @@ if(homeHero){
     const hotspot=homeHero.querySelector(selector);
     if(!hotspot)return;
     const activateHighlight=()=>{
-      if(homeHero.classList.contains("is-open")&&homeHero.classList.contains("is-sharp")){
+      if(homeHero.classList.contains("is-open")){
         clearHighlights();
         homeHero.classList.add(className);
       }
