@@ -105,19 +105,18 @@ if(homeHero){
   hotspotMap.forEach(([selector,className])=>{
     const hotspot=homeHero.querySelector(selector);
     if(!hotspot)return;
-    hotspot.addEventListener("pointerenter",()=>{
-      if(homeHero.classList.contains("is-open")){
+    const activateHighlight=()=>{
+      if(homeHero.classList.contains("is-open")&&homeHero.classList.contains("is-sharp")){
         clearHighlights();
         homeHero.classList.add(className);
       }
-    });
+    };
+    // pointermove doplňuje pointerenter: po skončení rozostření se oblasti
+    // zpřístupní kurzoru, který už může být nad jednou z nich.
+    hotspot.addEventListener("pointerenter",activateHighlight);
+    hotspot.addEventListener("pointermove",activateHighlight);
     hotspot.addEventListener("pointerleave",clearHighlights);
-    hotspot.addEventListener("focus",()=>{
-      if(homeHero.classList.contains("is-open")){
-        clearHighlights();
-        homeHero.classList.add(className);
-      }
-    });
+    hotspot.addEventListener("focus",activateHighlight);
     hotspot.addEventListener("blur",clearHighlights);
   });
 }
