@@ -34,23 +34,71 @@ if(hero&&crestTrigger){
 }
 
 if(hero&&crestCrossTrigger&&crestMotion){
-  crestCrossTrigger.addEventListener("click",event=>{
+  crestCrossTrigger.addEventListener("click",async event=>{
     event.preventDefault();
     event.stopPropagation();
     if(hero.classList.contains("is-open")||hero.classList.contains("is-crest-motion"))return;
 
-    // Animovaný WebP přehrává přímo prohlížeč; rozměry i pozici dědí
-    // z .crest-stage, tedy přesně z původního kruhu erbu.
-    crestMotion.src="assets/images/easter_egg.webp";
     hero.classList.add("is-crest-motion");
     crestCrossTrigger.disabled=true;
+    let decoder=null;
+    let holdTimer=null;
 
-    crestMotion.addEventListener("error",()=>{
-      console.error("Animaci easter_egg.webp se nepodařilo načíst.");
+    const finishAnimation=()=>{
+      window.clearTimeout(holdTimer);
+      if(decoder){
+        try{decoder.close();}catch(error){}
+        decoder=null;
+      }
       hero.classList.remove("is-crest-motion");
       crestCrossTrigger.disabled=false;
       crestMotion.removeAttribute("src");
-    },{once:true});
+    };
+
+    try{
+      if(!("ImageDecoder" in window))throw new Error("Tento prohlížeč nepodporuje dekódování animovaného WebP po snímcích.");
+      const response=await fetch("assets/images/easter_egg.webp",{cache:"no-store"});
+      if(!response.ok)throw new Error("Soubor easter_egg.webp se nepodařilo načíst.");
+
+      const bytes=await response.arrayBuffer();
+      decoder=new ImageDecoder({data:bytes,type:"image/webp"});
+      await decoder.tracks.ready;
+      const track=decoder.tracks.selectedTrack;
+      const frameCount=track?.frameCount||0;
+      if(!frameCount)throw new Error("Animovaný WebP neobsahuje žádné snímky.");
+
+      const canvas=document.createElement("canvas");
+      const context=canvas.getContext("2d");
+      let frameIndex=0;
+
+      const showFrame=async()=>{
+        const result=await decoder.decode({frameIndex,completeFramesOnly:true});
+        const frame=result.image;
+        if(!canvas.width||!canvas.height){
+          canvas.width=frame.displayWidth||frame.codedWidth;
+          canvas.height=frame.displayHeight||frame.codedHeight;
+        }
+        context.clearRect(0,0,canvas.width,canvas.height);
+        context.drawImage(frame,0,0,canvas.width,canvas.height);
+        crestMotion.src=canvas.toDataURL("image/png");
+
+        const duration=Math.max(20,Math.round((frame.duration||100000)/1000));
+        frame.close();
+        frameIndex++;
+
+        if(frameIndex<frameCount){
+          window.setTimeout(showFrame,duration);
+        }else{
+          // Poslední dekódovaný snímek ponecháme na obraze ještě dvě sekundy.
+          holdTimer=window.setTimeout(finishAnimation,2000);
+        }
+      };
+
+      await showFrame();
+    }catch(error){
+      console.error("Animaci easter_egg.webp se nepodařilo přehrát:",error);
+      finishAnimation();
+    }
   });
 }
 
