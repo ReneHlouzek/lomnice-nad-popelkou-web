@@ -19,6 +19,23 @@ const hero=document.querySelector(".hero-home");
 const crestTrigger=document.querySelector(".crest-trigger");
 const crestCrossTrigger=document.querySelector(".crest-cross-trigger");
 const crestMotion=document.querySelector(".hero-crest-motion");
+const crestStage=document.querySelector(".crest-stage");
+
+// Běžné kliknutí na erb znovu otevře rozcestník.
+// Malé tlačítko křížku má vlastní akci a jeho handler zastaví propagaci.
+if(hero&&crestTrigger&&crestStage){
+  crestStage.addEventListener("click",event=>{
+    if(event.target instanceof Element&&event.target.closest(".crest-cross-trigger"))return;
+    if(hero.classList.contains("is-crest-motion")||hero.classList.contains("is-open"))return;
+
+    hero.classList.add("is-open");
+    crestTrigger.setAttribute("aria-pressed","true");
+    crestTrigger.disabled=true;
+    if(crestCrossTrigger)crestCrossTrigger.disabled=true;
+    window.setTimeout(()=>hero.classList.add("is-sharp"),4200);
+  });
+}
+
 // Animaci načteme a předdekódujeme hned při startu stránky,
 // aby po kliknutí nezačalo čekání na stažení a dekódování snímků.
 const easterEggFramesPromise=(async()=>{
