@@ -102,21 +102,20 @@ const homeHero=document.querySelector(".hero-home");
 const hotspotMap=[[".hotspot-town","has-town"],[".hotspot-citizen","has-citizen"],[".hotspot-tourist","has-tourist"]];
 if(homeHero){
   const clearHighlights=()=>hotspotMap.forEach(([,name])=>homeHero.classList.remove(name));
-  hotspotMap.forEach(([selector,className])=>{
-    const hotspot=homeHero.querySelector(selector);
-    if(!hotspot)return;
-    const activateHighlight=()=>{
-      if(homeHero.classList.contains("is-open")){
-        clearHighlights();
-        homeHero.classList.add(className);
-      }
-    };
-    // pointermove doplňuje pointerenter: po skončení rozostření se oblasti
-    // zpřístupní kurzoru, který už může být nad jednou z nich.
-    hotspot.addEventListener("pointerenter",activateHighlight);
-    hotspot.addEventListener("pointermove",activateHighlight);
-    hotspot.addEventListener("pointerleave",clearHighlights);
-    hotspot.addEventListener("focus",activateHighlight);
-    hotspot.addEventListener("blur",clearHighlights);
+  const activateForTarget=target=>{
+    if(!homeHero.classList.contains("is-open"))return;
+    const match=hotspotMap.find(([selector])=>target instanceof Element&&target.closest(selector));
+    if(!match){clearHighlights();return;}
+    clearHighlights();
+    homeHero.classList.add(match[1]);
+  };
+
+  // Delegované události na hlavním obrazu jsou odolnější vůči změnám vrstev
+  // a pořadí vykreslování jednotlivých tlačítek.
+  homeHero.addEventListener("pointermove",event=>activateForTarget(event.target));
+  homeHero.addEventListener("pointerleave",clearHighlights);
+  homeHero.addEventListener("focusin",event=>activateForTarget(event.target));
+  homeHero.addEventListener("focusout",event=>{
+    if(!homeHero.contains(event.relatedTarget))clearHighlights();
   });
 }
