@@ -103,7 +103,7 @@ const hotspotMap=[[".hotspot-town","has-town"],[".hotspot-citizen","has-citizen"
 if(homeHero){
   const clearHighlights=()=>hotspotMap.forEach(([,name])=>homeHero.classList.remove(name));
   const activateForTarget=target=>{
-    if(!homeHero.classList.contains("is-open"))return;
+    if(!homeHero.classList.contains("is-open")||!homeHero.classList.contains("is-sharp"))return;
     const match=hotspotMap.find(([selector])=>target instanceof Element&&target.closest(selector));
     if(!match){clearHighlights();return;}
     clearHighlights();
