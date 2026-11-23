@@ -15,6 +15,6 @@
 @media(hover:none){.quadrant-hotspots{display:none}}
 
 
-/* Oprava hoveru rozcestníku: po otevření musí být aktivní celá vrstva i její výseče. */
-.hero.is-open .quadrant-hotspots{pointer-events:auto!important}
-.hero.is-open .quadrant-hotspot{pointer-events:auto!important}
+/* Oblasti rozcestníku se aktivují až po úplném doostření úvodního obrazu. */
+.hero.is-sharp .quadrant-hotspots{pointer-events:auto!important}
+.hero.is-sharp .quadrant-hotspot{pointer-events:auto!important}
