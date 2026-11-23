@@ -19,21 +19,51 @@ const hero=document.querySelector(".hero-home");
 const crestTrigger=document.querySelector(".crest-trigger");
 const crestCrossTrigger=document.querySelector(".crest-cross-trigger");
 const crestMotion=document.querySelector(".hero-crest-motion");
-let crestHoldTimer=null;
-const crestFinalFrameHold=2000;
+// Animaci načteme a předdekódujeme hned při startu stránky,
+// aby po kliknutí nezačalo čekání na stažení a dekódování snímků.
+const easterEggFramesPromise=(async()=>{
+  if(!("ImageDecoder" in window))throw new Error("Prohlížeč nepodporuje ImageDecoder.");
+  const response=await fetch("assets/images/easter_egg.webp",{cache:"force-cache"});
+  if(!response.ok)throw new Error("Soubor easter_egg.webp se nepodařilo načíst.");
+  const bytes=await response.arrayBuffer();
+  const decoder=new ImageDecoder({data:bytes,type:"image/webp"});
+  await decoder.tracks.ready;
+  const frameCount=decoder.tracks.selectedTrack?.frameCount||0;
+  if(!frameCount)throw new Error("Animovaný WebP neobsahuje žádné snímky.");
 
-if(hero&&crestTrigger){
-  crestTrigger.addEventListener("click",()=>{
-    if(hero.classList.contains("is-crest-motion"))return;
-    hero.classList.add("is-open");
-    crestTrigger.setAttribute("aria-pressed","true");
-    crestTrigger.disabled=true;
-    if(crestCrossTrigger)crestCrossTrigger.disabled=true;
-    window.setTimeout(()=>hero.classList.add("is-sharp"),4200);
-  });
-}
+  const frames=[];
+  try{
+    for(let frameIndex=0;frameIndex<frameCount;frameIndex++){
+      const result=await decoder.decode({frameIndex,completeFramesOnly:true});
+      const videoFrame=result.image;
+      const bitmap=await createImageBitmap(videoFrame);
+      frames.push({
+        bitmap,
+        duration:Math.max(20,Math.round((videoFrame.duration||100000)/1000))
+      });
+      videoFrame.close();
+    }
+  }finally{
+    decoder.close();
+  }
+  return frames;
+})().catch(error=>{
+  console.error("Přednačtení animace easter_egg.webp selhalo:",error);
+  return null;
+});
 
 if(hero&&crestCrossTrigger&&crestMotion){
+  const context=crestMotion.getContext("2d");
+  let playbackTimers=[];
+
+  const finishAnimation=()=>{
+    playbackTimers.forEach(timer=>window.clearTimeout(timer));
+    playbackTimers=[];
+    context.clearRect(0,0,crestMotion.width,crestMotion.height);
+    hero.classList.remove("is-crest-motion");
+    crestCrossTrigger.disabled=false;
+  };
+
   crestCrossTrigger.addEventListener("click",async event=>{
     event.preventDefault();
     event.stopPropagation();
@@ -41,60 +71,31 @@ if(hero&&crestCrossTrigger&&crestMotion){
 
     hero.classList.add("is-crest-motion");
     crestCrossTrigger.disabled=true;
-    let decoder=null;
-    let holdTimer=null;
-
-    const finishAnimation=()=>{
-      window.clearTimeout(holdTimer);
-      if(decoder){
-        try{decoder.close();}catch(error){}
-        decoder=null;
-      }
-      hero.classList.remove("is-crest-motion");
-      crestCrossTrigger.disabled=false;
-      crestMotion.removeAttribute("src");
-    };
 
     try{
-      if(!("ImageDecoder" in window))throw new Error("Tento prohlížeč nepodporuje dekódování animovaného WebP po snímcích.");
-      const response=await fetch("assets/images/easter_egg.webp",{cache:"no-store"});
-      if(!response.ok)throw new Error("Soubor easter_egg.webp se nepodařilo načíst.");
+      const frames=await easterEggFramesPromise;
+      if(!frames?.length)throw new Error("Přednačtené snímky animace nejsou dostupné.");
 
-      const bytes=await response.arrayBuffer();
-      decoder=new ImageDecoder({data:bytes,type:"image/webp"});
-      await decoder.tracks.ready;
-      const track=decoder.tracks.selectedTrack;
-      const frameCount=track?.frameCount||0;
-      if(!frameCount)throw new Error("Animovaný WebP neobsahuje žádné snímky.");
+      // Canvas přebírá skutečný poměr stran zdrojových snímků.
+      // CSS object-fit:contain jej zachová v původním kruhovém prostoru.
+      crestMotion.width=frames[0].bitmap.width;
+      crestMotion.height=frames[0].bitmap.height;
 
-      const canvas=document.createElement("canvas");
-      const context=canvas.getContext("2d");
       let frameIndex=0;
-
-      const showFrame=async()=>{
-        const result=await decoder.decode({frameIndex,completeFramesOnly:true});
-        const frame=result.image;
-        if(!canvas.width||!canvas.height){
-          canvas.width=frame.displayWidth||frame.codedWidth;
-          canvas.height=frame.displayHeight||frame.codedHeight;
-        }
-        context.clearRect(0,0,canvas.width,canvas.height);
-        context.drawImage(frame,0,0,canvas.width,canvas.height);
-        crestMotion.src=canvas.toDataURL("image/png");
-
-        const duration=Math.max(20,Math.round((frame.duration||100000)/1000));
-        frame.close();
+      const showFrame=()=>{
+        const frame=frames[frameIndex];
+        context.clearRect(0,0,crestMotion.width,crestMotion.height);
+        context.drawImage(frame.bitmap,0,0,crestMotion.width,crestMotion.height);
         frameIndex++;
 
-        if(frameIndex<frameCount){
-          window.setTimeout(showFrame,duration);
+        if(frameIndex<frames.length){
+          playbackTimers.push(window.setTimeout(showFrame,frame.duration));
         }else{
-          // Poslední dekódovaný snímek ponecháme na obraze ještě dvě sekundy.
-          holdTimer=window.setTimeout(finishAnimation,2000);
+          // Poslední snímek zůstane viditelný ještě dvě sekundy.
+          playbackTimers.push(window.setTimeout(finishAnimation,2000));
         }
       };
-
-      await showFrame();
+      showFrame();
     }catch(error){
       console.error("Animaci easter_egg.webp se nepodařilo přehrát:",error);
       finishAnimation();
