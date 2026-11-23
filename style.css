@@ -13,3 +13,8 @@
 .quadrant-hotspot:focus-visible{outline:3px solid #fff;outline-offset:-8px}
 @media(hover:hover){.quadrant-hotspot:hover{background:transparent}}
 @media(hover:none){.quadrant-hotspots{display:none}}
+
+
+/* Oprava hoveru rozcestníku: po otevření musí být aktivní celá vrstva i její výseče. */
+.hero.is-open .quadrant-hotspots{pointer-events:auto!important}
+.hero.is-open .quadrant-hotspot{pointer-events:auto!important}
